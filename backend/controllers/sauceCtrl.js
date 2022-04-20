@@ -83,7 +83,7 @@ exports.likeDisliked = (req, res, next) => {
     try {
       const like = req.body.like;
       const sauce = await Sauce.findOne({ _id: req.params.id });
-
+      // Si l'utilisateur ajoute un like
       if (like === 1) {
         sauce.likes++;
         console.log(sauce.likes);
@@ -98,6 +98,7 @@ exports.likeDisliked = (req, res, next) => {
           .then(() => res.status(200).json({ message: "Objet modifié !" }))
           .catch((error) => res.status(400).json({ error }));
       }
+      // Si l'utilisateur ajoute un dislike
       if (like === -1) {
         sauce.dislikes++;
         Sauce.updateOne(
@@ -111,6 +112,7 @@ exports.likeDisliked = (req, res, next) => {
           .then(() => res.status(200).json({ message: "Objet modifié !" }))
           .catch((error) => res.status(400).json({ error }));
       }
+      // Si l'utilisateur enlève son like ou Dislike
       if (like === 0) {
         if (sauce.usersLiked.includes(req.body.userId)) {
           const indexTab = sauce.usersLiked.indexOf(req.body.userId);
