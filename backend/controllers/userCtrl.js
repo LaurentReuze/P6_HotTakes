@@ -1,5 +1,6 @@
 const User = require("../models/usersModel");
 const bcrypt = require("bcrypt");
+const jwtoken = require("jsonwebtoken");
 
 // ------------------- Gestion de l'enregistrement d'une nouvel utilisateur ----------------
 exports.signup = (req, res, next) => {
@@ -46,7 +47,9 @@ exports.login = (req, res, next) => {
           // Sinon on envoi un status 200, et on envoi un objet JSON contenant le UserId et un Token
           res.status(200).json({
             userId: user._id,
-            token: "TOKEN",
+            token: jwtoken.sign({ userId: user._id }, "random_token_secret", {
+              expiresIn: "24h",
+            }),
           });
         })
         .catch((error) => res.status(500).json({ error }));

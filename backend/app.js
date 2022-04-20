@@ -1,6 +1,7 @@
 const express = require("express");
 const sauceRoutes = require("./routes/sauceRoute");
 const userRoutes = require("./routes/userRoute");
+const path = require("path");
 
 // Connexion à la base de donnée MongoDB
 require("./models/dbConnect");
@@ -22,9 +23,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/images", express.static(path.join(__dirname, "images")));
+
 // Utilisation des routes
 app.use("/api/auth", userRoutes);
-app.use("/api/sauce", sauceRoutes);
+app.use("/api/sauces", sauceRoutes);
 
 // -------------------------------------------------------
 // export de l'application avec la constante app
