@@ -13,6 +13,7 @@ module.exports = (req, res, next) => {
     const decodeToken = jwtoken.verify(token, "random_token_secret");
     // on recupère le userId de l'objet JS decodeToken
     const userId = decodeToken.userId;
+    req.auth = { userId };
     // le premier req.body vérifie si il y a un userId dans la requete
     // req.body.userId && req.body.userId vérifie si il y a un userId ET qu'il est différent
     // de userId du token

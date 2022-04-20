@@ -1,4 +1,6 @@
 const Sauce = require("../models/saucesModel");
+const fs = require("fs");
+const { table } = require("console");
 
 exports.getAllSauce = (req, res, next) => {
   // On cherche dans la BD; l'intégralite des sauces avcec Sauce.find()
@@ -56,9 +58,97 @@ exports.modifySauce = (req, res, next) => {
 };
 
 exports.deleteSauce = (req, res, next) => {
-  Sauce.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Objet supprimé !" }))
-    .catch((error) => res.status(400).json({ error }));
+  Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+    if (!sauce) {
+      res.status(404).json({ error: new Error("Objet non trouvé") });
+    }
+    if (sauce.userId !== req.auth.userId) {
+      res.status(401).json({ error: new Error("Requête non authorisé") });
+    }
+  });
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      const filename = sauce.imageUrl.split("/images/")[1];
+      fs.unlink(`images/${filename}`, () => {
+        Sauce.deleteOne({ _id: req.params.id })
+          .then(() => res.status(200).json({ message: "Sauce supprimé !" }))
+          .catch((error) => res.status(400).json({ error }));
+      });
+    })
+    .catch((error) => res.status(500).json({ error }));
 };
 
-exports.likeDisliked = (req, res, next) => {};
+exports.likeDisliked = (req, res, next) => {
+  async function modifSauce() {
+    try {
+      const like = req.body.like;
+      const sauce = await Sauce.findOne({ _id: req.params.id });
+
+      if (like === 1) {
+        sauce.likes++;
+        console.log(sauce.likes);
+        Sauce.updateOne(
+          { _id: req.params.id },
+          {
+            likes: sauce.likes,
+            usersLiked: [req.body.userId],
+            _id: req.params.id,
+          }
+        )
+          .then(() => res.status(200).json({ message: "Objet modifié !" }))
+          .catch((error) => res.status(400).json({ error }));
+      }
+      if (like === -1) {
+        sauce.dislikes++;
+        Sauce.updateOne(
+          { _id: req.params.id },
+          {
+            dislikes: sauce.dislikes,
+            usersDisliked: [req.body.userId],
+            _id: req.params.id,
+          }
+        )
+          .then(() => res.status(200).json({ message: "Objet modifié !" }))
+          .catch((error) => res.status(400).json({ error }));
+      }
+      if (like === 0) {
+        if (sauce.usersLiked.includes(req.body.userId)) {
+          const indexTab = sauce.usersLiked.indexOf(req.body.userId);
+          // console.log(indexTab);
+          sauce.usersLiked.splice(indexTab, 1);
+          // console.table(sauce.usersDisliked);
+          sauce.likes--;
+          Sauce.updateOne(
+            { _id: req.params.id },
+            {
+              likes: sauce.likes,
+              usersLiked: sauce.usersLiked,
+              _id: req.params.id,
+            }
+          )
+            .then(() => res.status(200).json({ message: "Objet modifié !" }))
+            .catch((error) => res.status(400).json({ error }));
+        } else {
+          const indexTab = sauce.usersDisliked.indexOf(req.body.userId);
+          // console.log(indexTab);
+          sauce.usersDisliked.splice(indexTab, 1);
+          // console.table(sauce.usersDisliked);
+          sauce.dislikes--;
+          Sauce.updateOne(
+            { _id: req.params.id },
+            {
+              dislikes: sauce.dislikes,
+              usersDisliked: sauce.usersDisliked,
+              _id: req.params.id,
+            }
+          )
+            .then(() => res.status(200).json({ message: "Objet modifié !" }))
+            .catch((error) => res.status(400).json({ error }));
+        }
+      }
+    } catch (error) {
+      (error) => res.status(400).json({ error });
+    }
+  }
+  modifSauce();
+};
