@@ -44,17 +44,27 @@ exports.creatSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-  const sauceObject = req.file
-    ? {
-        ...JSON.parse(req.body.sauce),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${
-          req.file.filename
-        }`,
-      }
-    : { ...req.body };
-  Sauce.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Sauce modifié !" }))
-    .catch((error) => res.status(400).json({ error }));
+  console.log(req.params.id);
+  console.log(_id);
+  // if (sauceId === req.body.id) {
+  //   console.log("Ok  je peux modifier le produit");
+  //   res.status(200).json({ message: "Sauce Modifié" });
+  // } else {
+  //   console.log("Va te gratter la moule");
+  //   res.status(400).json({ error });
+  // }
+
+  // const sauceObject = req.file
+  //   ? {
+  //       ...JSON.parse(req.body.sauce),
+  //       imageUrl: `${req.protocol}://${req.get("host")}/images/${
+  //         req.file.filename
+  //       }`,
+  //     }
+  //   : { ...req.body };
+  // Sauce.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+  //   .then(() => res.status(200).json({ message: "Sauce modifié !" }))
+  //   .catch((error) => res.status(400).json({ error }));
 };
 
 exports.deleteSauce = (req, res, next) => {
@@ -86,12 +96,13 @@ exports.likeDisliked = (req, res, next) => {
       // Si l'utilisateur ajoute un like
       if (like === 1) {
         sauce.likes++;
-        console.log(sauce.likes);
+        sauce.usersLiked.push(req.body.userId);
+        // console.log(sauce.likes);
         Sauce.updateOne(
           { _id: req.params.id },
           {
             likes: sauce.likes,
-            usersLiked: [req.body.userId],
+            usersLiked: sauce.usersLiked,
             _id: req.params.id,
           }
         )
@@ -101,11 +112,12 @@ exports.likeDisliked = (req, res, next) => {
       // Si l'utilisateur ajoute un dislike
       if (like === -1) {
         sauce.dislikes++;
+        sauce.usersDisliked.push(req.body.userId);
         Sauce.updateOne(
           { _id: req.params.id },
           {
             dislikes: sauce.dislikes,
-            usersDisliked: [req.body.userId],
+            usersDisliked: sauce.usersDisliked,
             _id: req.params.id,
           }
         )

@@ -1,9 +1,20 @@
 const User = require("../models/usersModel");
 const bcrypt = require("bcrypt");
 const jwtoken = require("jsonwebtoken");
+const userValidation = require("../validator/validator");
 
 // ------------------- Gestion de l'enregistrement d'une nouvel utilisateur ----------------
 exports.signup = (req, res, next) => {
+  // -----------------------------------------------------
+  // ----------- Validation de données -------------------
+  // -----------------------------------------------------
+
+  // On recupère les données de la requête
+  const body = req.body;
+  // Validation des données
+  const { error } = userValidation(body);
+  if (error) return res.status(401).json(error.details[0].message);
+
   // bcrypt.hash est la méthode de bcrypt pour hasher les données
   // (req.body.password) correspond au mot de passe envoyé dans la requête
   // le chiffre 10 correspond au passage de 10 fois la methode de hashage
@@ -26,6 +37,16 @@ exports.signup = (req, res, next) => {
 
 // ------------------- Gestion du login de l'utilisateur ----------------
 exports.login = (req, res, next) => {
+  // -----------------------------------------------------
+  // ----------- Validation de données -------------------
+  // -----------------------------------------------------
+
+  // On recupère les données de la requête
+  const body = req.body;
+  // Validation des données
+  const { error } = userValidation(body);
+  if (error) return res.status(401).json(error.details[0].message);
+
   // cherche le user dans la BD qui correspond à l'adresse mail récupéré dans la requête
   // {email: req.body.email} correspond à l'élément de comparaison pour la recherche dans la BD
   User.findOne({ email: req.body.email })
